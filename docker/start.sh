@@ -42,7 +42,21 @@ if [ -z "${NEXT_PRIVATE_DATABASE_URL:-}" ]; then
     exit 1
 fi
 
-npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma
+# Vercel requires a container to accept TCP connections shortly after it is
+# started. Run the idempotent migration in the background so the HTTP server
+# can become healthy immediately; the first deployment may briefly show the
+# app while the schema finishes initializing.
+npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma &
+MIGRATION_PID=$!
 
 printf "🌟 Starting Documenso server...\n"
-HOSTNAME=0.0.0.0 node build/server/main.js
+HOSTNAME=0.0.0.0 node build/server/main.js &
+SERVER_PID=$!
+
+# Keep the container tied to the web server. Surface a migration failure in
+# the runtime logs without terminating a server that has already started.
+(
+    wait "$MIGRATION_PID" || printf "❌ Database migration failed; inspect runtime logs.\n"
+) &
+
+wait "$SERVER_PID"
