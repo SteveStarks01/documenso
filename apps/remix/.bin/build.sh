@@ -20,7 +20,15 @@ echo "[Build]: Extracting and compiling translations"
 npm run translate --prefix ../../
 
 echo "[Build]: Building app"
-npm run build:app
+if [ "${DOCUMENSO_SKIP_TYPECHECK:-false}" = "true" ]; then
+  # The Vercel container builder has a tighter memory ceiling than the
+  # supported long-lived container hosts. Type checking is performed in CI;
+  # skip the duplicate build-time check here so the production bundle can be
+  # produced within that ceiling.
+  cross-env NODE_ENV=production react-router build
+else
+  npm run build:app
+fi
 
 echo "[Build]: Building server"
 npm run build:server

@@ -32,7 +32,7 @@ FROM base AS installer
 RUN apk add --no-cache libc6-compat jq make cmake g++ openssl bash
 WORKDIR /app
 
-ENV HUSKY=0 DOCKER_OUTPUT=1 NEXT_TELEMETRY_DISABLED=1
+ENV HUSKY=0 DOCKER_OUTPUT=1 NEXT_TELEMETRY_DISABLED=1 DOCUMENSO_SKIP_TYPECHECK=true
 
 # These defaults only allow the client bundle to build. The real values are
 # supplied as Vercel runtime environment variables and are never committed.
