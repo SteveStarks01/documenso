@@ -25,6 +25,23 @@ printf "📊 Certificate status: http://localhost:3000/api/certificate-status\n"
 printf "👥 Community: https://github.com/documenso/documenso\n\n"
 
 printf "🗄️  Running database migrations...\n"
+
+# Vercel's Neon integration supplies standard database variable names. Map
+# those to Documenso's private Prisma names only when the latter were not
+# explicitly configured, so managed database connections work at runtime.
+if [ -z "${NEXT_PRIVATE_DATABASE_URL:-}" ] && [ -n "${DATABASE_URL:-}" ]; then
+    export NEXT_PRIVATE_DATABASE_URL="$DATABASE_URL"
+fi
+
+if [ -z "${NEXT_PRIVATE_DIRECT_DATABASE_URL:-}" ]; then
+    export NEXT_PRIVATE_DIRECT_DATABASE_URL="${DATABASE_URL_UNPOOLED:-${NEXT_PRIVATE_DATABASE_URL:-}}"
+fi
+
+if [ -z "${NEXT_PRIVATE_DATABASE_URL:-}" ]; then
+    printf "❌ A database connection is required. Set DATABASE_URL or NEXT_PRIVATE_DATABASE_URL.\n"
+    exit 1
+fi
+
 npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma
 
 printf "🌟 Starting Documenso server...\n"
