@@ -82,6 +82,7 @@ COPY --from=installer --chown=nodejs:nodejs /app/packages/prisma/migrations ./pa
 RUN npx prisma generate --schema ./packages/prisma/schema.prisma
 
 COPY --chown=nodejs:nodejs ./docker/start.sh /app/apps/remix/start.sh
+COPY --chown=nodejs:nodejs ./docker/vercel-proxy.js /app/docker/vercel-proxy.js
 
 WORKDIR /app/apps/remix
 

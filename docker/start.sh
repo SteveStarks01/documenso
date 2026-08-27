@@ -50,7 +50,9 @@ npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma &
 MIGRATION_PID=$!
 
 printf "🌟 Starting Documenso server...\n"
-HOSTNAME=0.0.0.0 node build/server/main.js &
+# Keep Documenso on a loopback port while the readiness proxy binds Vercel's
+# externally supplied PORT immediately.
+HOSTNAME=127.0.0.1 PORT="${DOCUMENSO_UPSTREAM_PORT:-3000}" node build/server/main.js &
 SERVER_PID=$!
 
 # Keep the container tied to the web server. Surface a migration failure in
@@ -59,4 +61,4 @@ SERVER_PID=$!
     wait "$MIGRATION_PID" || printf "❌ Database migration failed; inspect runtime logs.\n"
 ) &
 
-wait "$SERVER_PID"
+exec node /app/docker/vercel-proxy.js
