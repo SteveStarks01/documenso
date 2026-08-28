@@ -9,6 +9,7 @@ printf "🚀 Starting Documenso...\n\n"
 # round-trip through Vercel's readiness proxy.
 export NEXT_PUBLIC_WEBAPP_URL="${DOCUMENSO_PUBLIC_URL:-https://sign.bridvia.com}"
 export NEXT_PRIVATE_INTERNAL_WEBAPP_URL="${DOCUMENSO_INTERNAL_URL:-http://127.0.0.1:3000}"
+export DOCUMENSO_WAIT_FOR_LOCAL_JOBS="${DOCUMENSO_WAIT_FOR_LOCAL_JOBS:-true}"
 
 # 🔐 Check certificate configuration
 printf "🔐 Checking certificate configuration...\n"

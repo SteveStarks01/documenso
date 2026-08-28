@@ -376,12 +376,35 @@ export class LocalJobProvider extends BaseJobProvider {
     }
 
     console.log('Submitting job to endpoint:', endpoint);
-    await Promise.race([
+
+    const request = () =>
       fetch(endpoint, {
         method: 'POST',
         body: JSON.stringify(data),
         headers,
-      }).catch(() => null),
+        signal: AbortSignal.timeout(30_000),
+      });
+
+    // A Vercel function may be frozen as soon as the originating request returns.
+    // Waiting for the internal job request keeps critical mail delivery (account
+    // confirmation and signing invitations) alive in the temporary serverless host.
+    // Other deployments retain Documenso's non-blocking local-job behaviour.
+    if (process.env.DOCUMENSO_WAIT_FOR_LOCAL_JOBS === 'true') {
+      const response = await request().catch((error: unknown) => {
+        console.error('[JOBS]: Failed to submit synchronous local job', error);
+
+        return null;
+      });
+
+      if (!response?.ok) {
+        console.error('[JOBS]: Synchronous local job endpoint returned an error', response?.status);
+      }
+
+      return;
+    }
+
+    await Promise.race([
+      request().catch(() => null),
       new Promise((resolve) => {
         setTimeout(resolve, 150);
       }),
