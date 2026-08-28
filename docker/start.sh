@@ -3,6 +3,13 @@
 # 🚀 Starting Documenso...
 printf "🚀 Starting Documenso...\n\n"
 
+# This temporary BRIDVIA deployment has one public signing origin and one
+# private in-container origin. Keep them explicit at runtime: browser links
+# and cookies must use the public hostname, while local jobs must not make a
+# round-trip through Vercel's readiness proxy.
+export NEXT_PUBLIC_WEBAPP_URL="${DOCUMENSO_PUBLIC_URL:-https://sign.bridvia.com}"
+export NEXT_PRIVATE_INTERNAL_WEBAPP_URL="${DOCUMENSO_INTERNAL_URL:-http://127.0.0.1:3000}"
+
 # 🔐 Check certificate configuration
 printf "🔐 Checking certificate configuration...\n"
 

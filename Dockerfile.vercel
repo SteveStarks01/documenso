@@ -67,7 +67,14 @@ RUN turbo run build --filter=@documenso/remix...
 ###########################
 FROM base AS runner
 
-ENV HUSKY=0 DOCKER_OUTPUT=1 NODE_ENV=production
+# Runtime fallbacks for the dedicated temporary BRIDVIA signing instance.
+# start.sh exports the same values to prevent a stale Vercel environment
+# value from making authentication cookies or local jobs point at localhost.
+ENV HUSKY=0 \
+  DOCKER_OUTPUT=1 \
+  NODE_ENV=production \
+  NEXT_PUBLIC_WEBAPP_URL=https://sign.bridvia.com \
+  NEXT_PRIVATE_INTERNAL_WEBAPP_URL=http://127.0.0.1:3000
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nodejs
