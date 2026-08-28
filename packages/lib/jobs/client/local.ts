@@ -207,6 +207,71 @@ export class LocalJobProvider extends BaseJobProvider {
           },
         });
 
+        // Vercel does not provide a durable background worker for this temporary
+        // installation. Run the job in the active request instead of posting it
+        // back through the container, so mail delivery and signing notices are
+        // completed before Vercel can freeze the function.
+        if (process.env.DOCUMENSO_RUN_LOCAL_JOBS_INLINE === 'true') {
+          let payload = options.payload;
+
+          if (job.trigger.schema) {
+            const result = job.trigger.schema.safeParse(payload);
+
+            if (!result.success) {
+              throw new Error(`Invalid payload for job ${job.id}`);
+            }
+
+            payload = result.data;
+          }
+
+          console.log(`[JOBS]: Running inline job ${options.name} with payload`, payload);
+
+          await prisma.backgroundJob.update({
+            where: {
+              id: pendingJob.id,
+              status: BackgroundJobStatus.PENDING,
+            },
+            data: {
+              status: BackgroundJobStatus.PROCESSING,
+            },
+          });
+
+          try {
+            await job.handler({
+              payload,
+              io: this.createJobRunIO(pendingJob.id),
+            });
+
+            await prisma.backgroundJob.update({
+              where: {
+                id: pendingJob.id,
+                status: BackgroundJobStatus.PROCESSING,
+              },
+              data: {
+                status: BackgroundJobStatus.COMPLETED,
+                completedAt: new Date(),
+              },
+            });
+          } catch (error) {
+            console.error(`[JOBS]: Inline job ${options.name} failed`, error);
+
+            await prisma.backgroundJob.update({
+              where: {
+                id: pendingJob.id,
+                status: BackgroundJobStatus.PROCESSING,
+              },
+              data: {
+                status: BackgroundJobStatus.FAILED,
+                completedAt: new Date(),
+              },
+            });
+
+            throw error;
+          }
+
+          return;
+        }
+
         await this.submitJobToEndpoint({
           jobId: pendingJob.id,
           jobDefinitionId: pendingJob.jobId,

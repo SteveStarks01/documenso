@@ -10,6 +10,7 @@ printf "🚀 Starting Documenso...\n\n"
 export NEXT_PUBLIC_WEBAPP_URL="${DOCUMENSO_PUBLIC_URL:-https://sign.bridvia.com}"
 export NEXT_PRIVATE_INTERNAL_WEBAPP_URL="${DOCUMENSO_INTERNAL_URL:-http://127.0.0.1:3000}"
 export DOCUMENSO_WAIT_FOR_LOCAL_JOBS="${DOCUMENSO_WAIT_FOR_LOCAL_JOBS:-true}"
+export DOCUMENSO_RUN_LOCAL_JOBS_INLINE="${DOCUMENSO_RUN_LOCAL_JOBS_INLINE:-true}"
 
 # 🔐 Check certificate configuration
 printf "🔐 Checking certificate configuration...\n"
